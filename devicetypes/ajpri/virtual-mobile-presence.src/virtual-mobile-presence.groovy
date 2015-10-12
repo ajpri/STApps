@@ -1,3 +1,8 @@
+//Release History
+//		1.0 Oct. 12, 2015
+//			Initial Release
+
+
 metadata {
         definition (name: "Virtual Mobile Presence", namespace: "ajpri", author: "Austin Pritchett") {
         capability "Switch"
