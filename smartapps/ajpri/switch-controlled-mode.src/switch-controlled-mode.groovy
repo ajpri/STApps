@@ -1,3 +1,7 @@
+//Release History
+//		1.0 Feb. 13, 2016
+//			Initial Release
+
 /**
  *  Switch Mode
  *
@@ -29,8 +33,8 @@ preferences {
         input "switch1", "capability.switch", multiple: false
     }
 section("Select Modes") {
-        input "onMode", "mode", title: "When switch is on"
-		input "offMode", "mode", title: "When switch is off"       
+        input "onMode", "mode", title: "When switch is on..."
+		input "offMode", "mode", title: "When switch is off..."       
     }
 
 }
@@ -47,7 +51,6 @@ def updated() {
 }
 
 def initialize() {
-	// TODO: subscribe to attributes, devices, locations, etc.
     subscribe(switch1, "switch", switchHandler)
 }
 
@@ -57,6 +60,5 @@ def switchHandler(evt) {
         setLocationMode(onMode)
     } else if (evt.value == "off") {
         setLocationMode(offMode)
-
     }
 }
