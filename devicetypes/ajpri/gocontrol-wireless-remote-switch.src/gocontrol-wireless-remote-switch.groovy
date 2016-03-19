@@ -17,16 +17,15 @@
  
  /*
  
- 	Version: Milestone 1
+ 	Version: Milestone 2
 	What Works:
 		Basic Functionality
  		Battery Reporting
+        Inverting buttons
 	What still needs work:
     	Device Fingerprinting - Needs Testing
         	Raw Description: 
             	0 0 0x1801 0 0 0 f 0x5E 0x86 0x72 0x5B 0x85 0x59 0x73 0x70 0x80 0x84 0x5A 0x7A 0xEF 0x5B 0x20
-    	Inverting buttons
-        	If Param. 4 set to 1, inverted; if not (0), normal
         Performance Optimizations
         Simulator Data
 		Code Clean-up
@@ -44,6 +43,8 @@ metadata {
 
 	simulator {
 		// TODO: define status and reply messages here
+        status "button 1 pushed":  "command: 5B03, payload: 40 00 01"
+		status "button 2 pushed":  "command: 5B03, payload: 41 00 02"
 	}
 
 	tiles {
@@ -56,10 +57,10 @@ metadata {
         main "button"
 		details(["button", "battery"])
 	}
-    //preferences {
-    //   input "invBtn", "bool", title: "Invert Top/Bottom Buttons",
-    //          required: false, displayDuringSetup: true
-    //}
+    preferences {
+       input "invBtn", "bool", title: "Invert Top/Bottom Buttons", dafault: false,
+              required: false, displayDuringSetup: true
+    }
 }
 
 // parse events into attributes
@@ -80,7 +81,7 @@ def parse(String description) {
 
 def zwaveEvent(physicalgraph.zwave.commands.centralscenev1.CentralSceneNotification cmd) {
 	//log.debug "scene hit a"
-    log.debug cmd.sceneNumber
+    //log.debug cmd.sceneNumber
     
     Integer button = (cmd.sceneNumber) as Integer
 	buttonEvent(button)
@@ -100,12 +101,19 @@ def zwaveEvent(physicalgraph.zwave.commands.wakeupv1.WakeUpNotification cmd) {
 		result << response(zwave.batteryV1.batteryGet())
 		result << response("delay 1200")  // leave time for device to respond to batteryGet
 	}
+    
+    int invBtnI = (invBtn) ? 1 : 0;
+    //This line could help with inverting buttons, but not tested.
+	result << response(zwave.configurationV1.configurationSet(parameterNumber:4, size:1, scaledConfigurationValue:invBtnI).format())
+    result << response(zwave.wakeUpV1.wakeUpIntervalSet(seconds:4 * 3600, nodeid:zwaveHubNodeId).format())    
+
+    
 	result << response(zwave.wakeUpV1.wakeUpNoMoreInformation())
     result
 }
 
 def zwaveEvent(physicalgraph.zwave.commands.batteryv1.BatteryReport cmd) {
-    log.debug cmd.batteryLevel
+    //log.debug cmd.batteryLevel
     
     def result = []
 	def map = [ name: "battery", unit: "%" ]
@@ -122,26 +130,9 @@ def zwaveEvent(physicalgraph.zwave.commands.batteryv1.BatteryReport cmd) {
 	result
 }
 
-// handle commands
-
-def configurationCmds(){
-	def cmds = []
-    cmds << zwave.batteryV1.batteryGet().format()
-    cmds << "delay 1200"
-    cmds << zwave.wakeUpV1.wakeUpNoMoreInformation().format()
-    [event, response(cmds)] // return a list containing the event and the result of response()
-}
-
 
 def configure() {
 	log.debug "Executing 'configure'"
-    log.debug invBtn
-	// TODO: handle 'configure' command
-    int invBtnI = (invBtn) ? 1 : 0;
-	log.debug myInt
-    //delayBetween([
-    	//This line could help with inverting buttons, but not tested.
-		//zwave.configurationV1.configurationSet(parameterNumber:4, size:1, scaledConfigurationValue:invBtnI).format(),
-		zwave.wakeUpV1.wakeUpIntervalSet(seconds:4 * 3600, nodeid:zwaveHubNodeId).format()
-        //])
+    zwave.wakeUpV1.wakeUpIntervalSet(seconds:4 * 3600, nodeid:zwaveHubNodeId).format()
+        
 }
