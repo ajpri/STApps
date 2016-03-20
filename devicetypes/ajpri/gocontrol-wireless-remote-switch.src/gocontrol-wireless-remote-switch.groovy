@@ -17,19 +17,16 @@
  
  /*
  
- 	Version: Milestone 2
+ 	Version: Milestone 3
 	What Works:
 		Basic Functionality
  		Battery Reporting
-        Inverting buttons
+        Inverting buttons - Needs Improvement
+        Device Fingerprinting (Auto-Identify)
 	What still needs work:
-    	Device Fingerprinting - Needs Testing
-        	Raw Description: 
-            	0 0 0x1801 0 0 0 f 0x5E 0x86 0x72 0x5B 0x85 0x59 0x73 0x70 0x80 0x84 0x5A 0x7A 0xEF 0x5B 0x20
-        Performance Optimizations
+		Performance Optimizations
         Simulator Data
 		Code Clean-up
- 
  */
 
 metadata {
@@ -38,7 +35,7 @@ metadata {
 		capability "Configuration"
         capability "Battery"
 
-        fingerprint deviceId:"0x1801", inClusters:"0x20, 0x5B, 0x70, 0x73, 0x80, 0x84"
+		fingerprint deviceId:"0x1801", inClusters:"0x5E, 0x86, 0x72, 0x5B, 0x85, 0x59, 0x73, 0x70, 0x80, 0x84, 0x5A, 0x7A", outClusters:"0x5B, 0x20"        
 	}
 
 	simulator {
