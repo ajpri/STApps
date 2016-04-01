@@ -17,15 +17,16 @@
  
  /*
  
- 	Version: Milestone 3
+ 	Version: Milestone 4
 	What Works:
 		Basic Functionality
  		Battery Reporting
-        Inverting buttons - Needs Improvement
         Device Fingerprinting (Auto-Identify)
-	What still needs work:
-		Performance Optimizations
         Simulator Data
+        Held Events
+	What still needs work:
+        Inverting buttons
+		Performance Optimizations
 		Code Clean-up
  */
 
@@ -68,7 +69,8 @@ def parse(String description) {
 	if (description.startsWith("Err")) {
 	    results = createEvent(descriptionText:description, displayed:true)
 	} else {
-		def cmd = zwave.parse(description, [0x2B: 1, 0x80: 1, 0x84: 1])
+		def cmd = zwave.parse(description)
+
 		if(cmd) results += zwaveEvent(cmd)
 		if(!results) results = [ descriptionText: cmd, displayed: true ]
 	}
@@ -77,20 +79,20 @@ def parse(String description) {
 }
 
 def zwaveEvent(physicalgraph.zwave.commands.centralscenev1.CentralSceneNotification cmd) {
-	//log.debug "scene hit a"
-    //log.debug cmd.sceneNumber
-    
-    Integer button = (cmd.sceneNumber) as Integer
-	buttonEvent(button)
-    
+    Integer button = (cmd.sceneNumber) as Integer    
+
+    if(cmd.keyAttributes == 0){
+		createEvent(name: "button", value: "pushed", data: [buttonNumber: button], descriptionText: "$device.displayName button $button was pushed", isStateChange: true)
+    }else if(cmd.keyAttributes == 1){
+		createEvent(name: "button", value: "released", data: [buttonNumber: button], descriptionText: "$device.displayName button $button was released", isStateChange: true)
+    }else if(cmd.keyAttributes == 2){
+		createEvent(name: "button", value: "held", data: [buttonNumber: button], descriptionText: "$device.displayName button $button was held", isStateChange: true)
+
+    }   
+   
 }
 
-def buttonEvent(button) {
-	button = button as Integer
-	createEvent(name: "button", value: "pushed", data: [buttonNumber: button], descriptionText: "$device.displayName button $button was pushed", isStateChange: true)
-}
-
-def zwaveEvent(physicalgraph.zwave.commands.wakeupv1.WakeUpNotification cmd) {
+def zwaveEvent(physicalgraph.zwave.commands.wakeupv2.WakeUpNotification cmd) {
 	def result = [createEvent(descriptionText: "${device.displayName} woke up", isStateChange: false)]
 
 	// Only ask for battery if we haven't had a BatteryReport in a while
@@ -99,10 +101,10 @@ def zwaveEvent(physicalgraph.zwave.commands.wakeupv1.WakeUpNotification cmd) {
 		result << response("delay 1200")  // leave time for device to respond to batteryGet
 	}
     
-    int invBtnI = (invBtn) ? 1 : 0;
+    //int invBtnI = (invBtn) ? 1 : 0;
     //This line could help with inverting buttons, but not tested.
-	result << response(zwave.configurationV1.configurationSet(parameterNumber:4, size:1, scaledConfigurationValue:invBtnI).format())
-    result << response(zwave.wakeUpV1.wakeUpIntervalSet(seconds:4 * 3600, nodeid:zwaveHubNodeId).format())    
+	//result << response(zwave.configurationV1.configurationSet(parameterNumber:4, size:1, scaledConfigurationValue:invBtnI).format())
+    //result << response(zwave.wakeUpV1.wakeUpIntervalSet(seconds:4 * 3600, nodeid:zwaveHubNodeId).format())    
 
     
 	result << response(zwave.wakeUpV1.wakeUpNoMoreInformation())
@@ -127,9 +129,27 @@ def zwaveEvent(physicalgraph.zwave.commands.batteryv1.BatteryReport cmd) {
 	result
 }
 
+def configurationCmds() {
+	def cmds = []
+	def hubId = zwaveHubNodeId
+	int invBtnI = (invBtn) ? 1 : 0;	
+	cmds << zwave.configurationV1.configurationSet(parameterNumber:4, size:1, scaledConfigurationValue:invBtnI).format()
+		
+	cmds
+}
 
 def configure() {
+	//def cmds = configurationCmds()
+	//log.debug("Sending configuration: $cmds")
+	//return cmds
+}
+/*
 	log.debug "Executing 'configure'"
     zwave.wakeUpV1.wakeUpIntervalSet(seconds:4 * 3600, nodeid:zwaveHubNodeId).format()
+    
+    
+    int invBtnI = (invBtn) ? 1 : 0;
+    //This line could help with inverting buttons, but not tested.
+	zwave.configurationV1.configurationSet(parameterNumber:4, size:1, scaledConfigurationValue:invBtnI).format()
+*/    
         
-}
