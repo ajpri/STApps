@@ -1,5 +1,5 @@
 /**
- *  GoControl WA00Z-1
+ *  GoControl Wireless Remote Switch WA00Z-1
  *
  *  Copyright 2016 Austin Pritchett
  *
@@ -16,18 +16,9 @@
  */
  
  /*
- 
- 	Version: Milestone 4
-	What Works:
-		Basic Functionality
- 		Battery Reporting
-        Device Fingerprinting (Auto-Identify)
-        Simulator Data
-        Held Events
-	What still needs work:
-        Inverting buttons
-		Performance Optimizations
-		Code Clean-up
+ Version 1
+ 	April 12th, 2016
+    Initial Release
  */
 
 metadata {
@@ -55,10 +46,6 @@ metadata {
         main "button"
 		details(["button", "battery"])
 	}
-    preferences {
-       input "invBtn", "bool", title: "Invert Top/Bottom Buttons", dafault: false,
-              required: false, displayDuringSetup: true
-    }
 }
 
 // parse events into attributes
@@ -84,12 +71,10 @@ def zwaveEvent(physicalgraph.zwave.commands.centralscenev1.CentralSceneNotificat
     if(cmd.keyAttributes == 0){
 		createEvent(name: "button", value: "pushed", data: [buttonNumber: button], descriptionText: "$device.displayName button $button was pushed", isStateChange: true)
     }else if(cmd.keyAttributes == 1){
-		createEvent(name: "button", value: "released", data: [buttonNumber: button], descriptionText: "$device.displayName button $button was released", isStateChange: true)
+		createEvent(name: "button", value: "holdRelease", data: [buttonNumber: button], descriptionText: "$device.displayName button $button was released", isStateChange: true)
     }else if(cmd.keyAttributes == 2){
 		createEvent(name: "button", value: "held", data: [buttonNumber: button], descriptionText: "$device.displayName button $button was held", isStateChange: true)
-
-    }   
-   
+    }      
 }
 
 def zwaveEvent(physicalgraph.zwave.commands.wakeupv2.WakeUpNotification cmd) {
@@ -101,19 +86,11 @@ def zwaveEvent(physicalgraph.zwave.commands.wakeupv2.WakeUpNotification cmd) {
 		result << response("delay 1200")  // leave time for device to respond to batteryGet
 	}
     
-    //int invBtnI = (invBtn) ? 1 : 0;
-    //This line could help with inverting buttons, but not tested.
-	//result << response(zwave.configurationV1.configurationSet(parameterNumber:4, size:1, scaledConfigurationValue:invBtnI).format())
-    //result << response(zwave.wakeUpV1.wakeUpIntervalSet(seconds:4 * 3600, nodeid:zwaveHubNodeId).format())    
-
-    
 	result << response(zwave.wakeUpV1.wakeUpNoMoreInformation())
     result
 }
 
-def zwaveEvent(physicalgraph.zwave.commands.batteryv1.BatteryReport cmd) {
-    //log.debug cmd.batteryLevel
-    
+def zwaveEvent(physicalgraph.zwave.commands.batteryv1.BatteryReport cmd) {    
     def result = []
 	def map = [ name: "battery", unit: "%" ]
 	if (cmd.batteryLevel == 0xFF) {
@@ -129,27 +106,6 @@ def zwaveEvent(physicalgraph.zwave.commands.batteryv1.BatteryReport cmd) {
 	result
 }
 
-def configurationCmds() {
-	def cmds = []
-	def hubId = zwaveHubNodeId
-	int invBtnI = (invBtn) ? 1 : 0;	
-	cmds << zwave.configurationV1.configurationSet(parameterNumber:4, size:1, scaledConfigurationValue:invBtnI).format()
-		
-	cmds
-}
-
 def configure() {
-	//def cmds = configurationCmds()
-	//log.debug("Sending configuration: $cmds")
-	//return cmds
+	
 }
-/*
-	log.debug "Executing 'configure'"
-    zwave.wakeUpV1.wakeUpIntervalSet(seconds:4 * 3600, nodeid:zwaveHubNodeId).format()
-    
-    
-    int invBtnI = (invBtn) ? 1 : 0;
-    //This line could help with inverting buttons, but not tested.
-	zwave.configurationV1.configurationSet(parameterNumber:4, size:1, scaledConfigurationValue:invBtnI).format()
-*/    
-        
