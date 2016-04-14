@@ -37,7 +37,7 @@ preferences {
     }
     
     section("Delay before turning off.") {
-        input "delay", "decimal", title: "Number of seconds", required: false, defaultValue: "2"
+        input "delay", "decimal", title: "Number of seconds", required: true, defaultValue: "2"
     }
 }
 
