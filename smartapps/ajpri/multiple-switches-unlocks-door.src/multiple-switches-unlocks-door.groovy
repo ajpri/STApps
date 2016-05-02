@@ -27,7 +27,7 @@
 	2) Click “New SmartApp”
 	3) Click “From Code" and paste in the code from the GitHub link. Click Create.
 	4) Click Publish > For Me. 
-	5) The SmartApp is ready for use! It'll be in the "My Apps" Section of the IDE.
+	5) The SmartApp is ready for use! It'll be in the "My Apps" Section of the App.
  
  */
  
